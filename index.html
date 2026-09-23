@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typerspeed - Game Kecepatan Mengetik</title>
+  <meta name="description" content="Typerspeed - Game uji kecepatan mengetik dengan live background langit dinamis, 100 level kesulitan, dan leaderboard global.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.45);
+      --correct: #10b981;
+      --correct-glow: rgba(16, 185, 129, 0.5);
+      --wrong: #ef4444;
+      --wrong-glow: rgba(239, 68, 68, 0.5);
+      --pending: #ffffff;
+      --bg-dark: #070d18;
+      --glass-bg: rgba(13, 23, 42, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-glow: rgba(56, 189, 248, 0.2);
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: #fff;
+    }
+
+    /* Live Sky Canvas */
+    #sky-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* App Container */
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Common Glass Panels */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--glass-glow);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Views */
+    .screen {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96) translateY(15px);
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+
+    /* --- LOBBY SCREEN --- */
+    .lobby-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #38bdf8;
+      margin-bottom: 14px;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .game-title {
+      font-size: 4.5rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .game-tagline {
+      font-size: 1.15rem;
+      color: #cbd5e1;
+      max-width: 500px;
+      margin: 0 auto;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .player-profile-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 18px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .player-profile-bar span {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .player-profile-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #38bdf8;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: inherit;
+      width: 140px;
+      text-align: left;
+    }
+
+    .player-score-tag {
+      background: rgba(56, 189, 248, 0.2);
+      color: #e0f2fe;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    /* Giant Play Button */
+    .play-btn-wrapper {
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    .btn-play {
+      position: relative;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%);
+      border: none;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 50px rgba(14, 165, 233, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.4);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 2;
+    }
+
+    .btn-play svg {
+      width: 44px;
+      height: 44px;
+      fill: #ffffff;
+      margin-bottom: 6px;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+      transition: transform 0.3s ease;
+    }
+
+    .btn-play:hover {
+      transform: scale(1.09);
+      box-shadow: 0 0 75px rgba(56, 189, 248, 0.9), inset 0 0 25px rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-play:hover svg {
+      transform: translateX(4px);
+    }
+
+    .btn-play:active {
+      transform: scale(0.97);
+    }
+
+    .pulse-ring {
+      position: absolute;
+      top: -15px;
+      left: -15px;
+      right: -15px;
+      bottom: -15px;
+      border-radius: 50%;
+      border: 2px solid rgba(56, 189, 248, 0.6);
+      animation: pulseAnimation 2.4s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+      pointer-events: none;
+    }
+
+    .pulse-ring:nth-child(2) {
+      animation-delay: 0.8s;
+    }
+
+    @keyframes pulseAnimation {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+
+    .lobby-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+      transition: all 0.25s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
+    }
+
+    /* Sound Toggle in Top Corner */
+    .top-controls {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      display: flex;
+      gap: 12px;
+      z-index: 20;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(56, 189, 248, 0.3);
+      border-color: #38bdf8;
+      transform: scale(1.08);
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* --- GAMEPLAY SCREEN --- */
+    .gameplay-container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* HUD Bar */
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      border-radius: 20px;
+    }
+
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hud-label {
+      font-size: 0.75rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .hud-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hud-level-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(129, 140, 248, 0.3));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 6px 16px;
+      border-radius: 14px;
+    }
+
+    .hud-level-badge .badge-icon {
+      font-size: 1.1rem;
+    }
+
+    .hud-level-badge .level-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+
+    /* Progress Track */
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #10b981);
+      border-radius: 10px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+
+    /* Typing Arena */
+    .typing-arena {
+      padding: 42px 40px;
+      border-radius: 24px;
+      position: relative;
+      cursor: text;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+    .text-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.85rem;
+      line-height: 1.7;
+      letter-spacing: 0.5px;
+      word-break: break-word;
+      user-select: none;
+      position: relative;
+      white-space: pre-wrap;
+    }
+
+    /* Character states */
+    .char {
+      position: relative;
+      display: inline;
+      transition: color 0.06s ease, text-shadow 0.06s ease;
+    }
+
+    .char.space {
+      display: inline-block;
+      min-width: 0.55em;
+    }
+
+    .char.pending {
+      color: #ffffff;
+      opacity: 0.95;
+    }
+
+    .char.correct {
+      color: var(--correct);
+      text-shadow: 0 0 10px var(--correct-glow);
+    }
+
+    .char.wrong {
+      color: var(--wrong);
+      background: rgba(239, 68, 68, 0.35);
+      border-radius: 4px;
+      text-shadow: 0 0 10px var(--wrong-glow);
+    }
+
+    .char.space.wrong {
+      background: rgba(239, 68, 68, 0.45);
+      border-radius: 4px;
+      min-width: 0.55em;
+    }
+
+    .char.current {
+      border-bottom: 3px solid #38bdf8;
+      box-shadow: 0 4px 14px var(--primary-glow);
+      animation: blinkCursor 0.9s infinite ease-in-out;
+    }
+
+    @keyframes blinkCursor {
+      0%, 100% { border-bottom-color: #38bdf8; }
+      50% { border-bottom-color: transparent; }
+    }
+
+    /* Hidden input to capture mobile keyboard and focus */
+    #hidden-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      left: -9999px;
+    }
+
+    .typing-instruction {
+      margin-top: 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .typing-instruction kbd {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: inherit;
+      color: #fff;
+      font-size: 0.8rem;
+    }
+
+    /* --- MODALS (Victory & Leaderboard & Level Select) --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(3, 7, 18, 0.8);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 580px;
+      padding: 36px 32px;
+      text-align: center;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+    }
+
+    .victory-badge {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      box-shadow: 0 0 35px var(--correct-glow);
+    }
+
+    .victory-badge svg {
+      width: 44px;
+      height: 44px;
+      fill: #fff;
+    }
+
+    .modal-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .modal-subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 24px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .stat-box {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 14px 10px;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .stat-box .stat-value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .points-highlight {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 14px 20px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .points-highlight span {
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .points-highlight strong {
+      font-size: 1.3rem;
+      color: #10b981;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* 3 Action Buttons requested: Exit, Restart, Continue */
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.3fr;
+      gap: 12px;
+    }
+
+    .action-btn {
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-exit {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .btn-exit:hover {
+      background: rgba(239, 68, 68, 0.3);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .btn-restart {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #e2e8f0;
+    }
+
+    .btn-restart:hover {
+      background: rgba(148, 163, 184, 0.3);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .btn-continue {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 20px var(--correct-glow);
+    }
+
+    .btn-continue:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 30px var(--correct-glow);
+    }
+
+    /* --- LEADERBOARD MODAL --- */
+    .leaderboard-table-wrapper {
+      max-height: 380px;
+      overflow-y: auto;
+      margin: 20px 0 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(10, 17, 30, 0.6);
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .leaderboard-table th {
+      background: rgba(15, 23, 42, 0.9);
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .leaderboard-table td {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .leaderboard-table tr:hover {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .rank-cell {
+      font-weight: 800;
+      width: 50px;
+      text-align: center;
+    }
+
+    .rank-1 { color: #f59e0b; text-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+    .rank-2 { color: #94a3b8; }
+    .rank-3 { color: #d97706; }
+
+    .player-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .score-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #38bdf8;
+      text-align: right;
+    }
+
+    .is-me {
+      background: rgba(56, 189, 248, 0.18) !important;
+      border-left: 3px solid #38bdf8;
+    }
+
+    /* --- LEVEL SELECT MODAL --- */
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 10px 4px;
+      margin: 16px 0 24px;
+    }
+
+    .level-chip {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      transition: all 0.2s ease;
+    }
+
+    .level-chip:hover:not(.locked) {
+      transform: scale(1.1);
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.25);
+    }
+
+    .level-chip.completed {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #10b981;
+    }
+
+    .level-chip.current-active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.7);
+    }
+
+    .level-chip.locked {
+      opacity: 0.35;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .game-title {
+        font-size: 3.2rem;
+      }
+      .btn-play {
+        width: 170px;
+        height: 170px;
+        font-size: 1.6rem;
+      }
+      .text-display {
+        font-size: 1.35rem;
+      }
+      .hud-bar {
+        padding: 12px 16px;
+      }
+      .levels-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .modal-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Live Sky Background -->
+  <canvas id="sky-canvas"></canvas>
+
+  <!-- Confetti Particle Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Top Controls -->
+  <div class="top-controls">
+    <button id="sound-toggle" class="icon-btn" title="Nyalakan/Matikan Suara">
+      <svg id="sound-icon-on" viewBox="0 0 24 24">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+      </svg>
+      <svg id="sound-icon-off" viewBox="0 0 24 24" style="display: none;">
+        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27l4.73 4.73H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- App Wrapper -->
+  <div id="app">
+
+    <!-- 1. LOBBY SCREEN -->
+    <div id="lobby-screen" class="screen active">
+      <div class="lobby-header">
+        <div class="logo-badge">
+          <span>⚡ Kecepatan & Ketepatan</span>
+        </div>
+        <h1 class="game-title">TYPERSPEED</h1>
+        <p class="game-tagline">Tantang jemarimu menaklukkan 100 level dari pemula hingga master pengetik tercepat!</p>
+      </div>
+
+      <!-- Player Profile Bar -->
+      <div class="player-profile-bar">
+        <span>Pemain:</span>
+        <input type="text" id="player-name-input" maxlength="15" value="SpeedRacer" title="Klik untuk mengubah nama">
+        <div class="player-score-tag">
+          <span id="player-lobby-score">0</span> Pts
+        </div>
+      </div>
+
+      <!-- Live Center Play Button -->
+      <div class="play-btn-wrapper">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring"></div>
+        <button id="btn-play-game" class="btn-play" title="Mulai Petualangan Mengetik">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <span>PLAY</span>
+        </button>
+      </div>
+
+      <!-- Lobby Auxiliary Controls -->
+      <div class="lobby-actions">
+        <button id="btn-open-levels" class="btn-secondary">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 6h16V4H4v2zm0 5h16V9H4v2zm0 5h16v-2H4v2zm0 5h16v-2H4v2z"/>
+          </svg>
+          Level (1-100)
+        </button>
+
+        <button id="btn-open-leaderboard" class="btn-secondary">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V18z"/>
+          </svg>
+          Leaderboard
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. GAMEPLAY SCREEN -->
+    <div id="gameplay-screen" class="screen">
+      <div class="gameplay-container">
+        <!-- HUD Bar -->
+        <div class="hud-bar glass-card">
+          <div class="hud-level-badge">
+            <span class="badge-icon">🎯</span>
+            <div class="hud-item" style="align-items: flex-start;">
+              <span class="hud-label">LEVEL</span>
+              <span id="game-current-level" class="level-num">1</span>
+            </div>
+          </div>
+
+          <div class="hud-item">
+            <span class="hud-label">WPM</span>
+            <span id="game-wpm" class="hud-value">0</span>
+          </div>
+
+          <div class="hud-item">
+            <span class="hud-label">AKURASI</span>
+            <span id="game-accuracy" class="hud-value">100%</span>
+          </div>
+
+          <div class="hud-item">
+            <span class="hud-label">TOTAL SKOR</span>
+            <span id="game-score" class="hud-value" style="color: #38bdf8;">0</span>
+          </div>
+
+          <button id="btn-pause-exit" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" title="Kembali ke Lobby">
+            Lobby
+          </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-track">
+          <div id="game-progress-bar" class="progress-fill"></div>
+        </div>
+
+        <!-- Typing Arena -->
+        <div id="typing-arena" class="typing-arena glass-card">
+          <div id="text-display" class="text-display">
+            <!-- Dynamically populated character spans -->
+          </div>
+
+          <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+          <div class="typing-instruction">
+            <span>Ketik huruf yang tertera di atas. Huruf benar jadi <b style="color: #10b981;">Hijau</b>, huruf keliru jadi <b style="color: #ef4444;">Merah</b>.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 3. VICTORY MODAL (Exit, Restart, Continue) -->
+  <div id="victory-modal" class="modal-overlay">
+    <div class="modal-content glass-card">
+      <div class="victory-badge">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+        </svg>
+      </div>
+
+      <h2 class="modal-title">Level Berhasil!</h2>
+      <p class="modal-subtitle">Kerja luar biasa! Kamu menyelesaikan tantangan ini dengan gemilang.</p>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Kecepatan</div>
+          <div id="victory-wpm" class="stat-value">65 WPM</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Akurasi</div>
+          <div id="victory-acc" class="stat-value">98%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Waktu</div>
+          <div id="victory-time" class="stat-value">12.4s</div>
+        </div>
+      </div>
+
+      <div class="points-highlight">
+        <span>Hadiah Poin Level:</span>
+        <strong>+250 Poin</strong>
+      </div>
+
+      <!-- 3 Specific Choices: Exit, Restart, Continue -->
+      <div class="modal-actions">
+        <button id="btn-victory-exit" class="action-btn btn-exit" title="Keluar ke Lobby Utama">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Exit
+        </button>
+        <button id="btn-victory-restart" class="action-btn btn-restart" title="Ulangi Level Ini">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Restart
+        </button>
+        <button id="btn-victory-continue" class="action-btn btn-continue" title="Lanjut ke Level Selanjutnya">
+          Continue
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. LEADERBOARD MODAL -->
+  <div id="leaderboard-modal" class="modal-overlay">
+    <div class="modal-content glass-card" style="max-width: 620px;">
+      <h2 class="modal-title">Papan Skor Global</h2>
+      <p class="modal-subtitle">Pemain dengan poin tertinggi bertengger di puncak peringkat!</p>
+
+      <div class="leaderboard-table-wrapper">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th class="rank-cell">#</th>
+              <th>Pemain</th>
+              <th style="text-align: center;">Level</th>
+              <th style="text-align: right;">Poin</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <!-- Populated via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button id="btn-close-leaderboard" class="btn-secondary" style="width: 100%;">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. LEVEL SELECT MODAL (1-100) -->
+  <div id="levels-modal" class="modal-overlay">
+    <div class="modal-content glass-card" style="max-width: 720px;">
+      <h2 class="modal-title">Pilih Level (1 - 100)</h2>
+      <p class="modal-subtitle">Setiap level yang terselesaikan akan memberikan +250 Poin.</p>
+
+      <div id="levels-container" class="levels-grid">
+        <!-- 100 level chips populated dynamically -->
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button id="btn-close-levels" class="btn-secondary" style="width: 100%;">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT GAME LOGIC -->
+  <script>
+    /* ==========================================================
+       1. LIVE MOVING SKY BACKGROUND (DYNAMIC CANVAS)
+       ========================================================== */
+    const skyCanvas = document.getElementById('sky-canvas');
+    const skyCtx = skyCanvas.getContext('2d');
+
+    let width = 0;
+    let height = 0;
+
+    function resizeSky() {
+      width = skyCanvas.width = window.innerWidth;
+      height = skyCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeSky);
+    resizeSky();
+
+    // Procedural Clouds & Sky Elements
+    const clouds = [];
+    const CLOUD_COUNT = 9;
+
+    class Cloud {
+      constructor() {
+        this.reset(true);
+      }
+
+      reset(init = false) {
+        this.x = init ? Math.random() * width : -300;
+        this.y = Math.random() * (height * 0.65);
+        this.speed = 0.25 + Math.random() * 0.45;
+        this.scale = 0.7 + Math.random() * 1.1;
+        this.opacity = 0.15 + Math.random() * 0.22;
+        this.puffs = [];
+        const puffCount = 5 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < puffCount; i++) {
+          this.puffs.push({
+            dx: (i - puffCount / 2) * (30 * this.scale),
+            dy: (Math.random() - 0.5) * (20 * this.scale),
+            r: (35 + Math.random() * 30) * this.scale
+          });
+        }
+      }
+
+      update() {
+        this.x += this.speed;
+        if (this.x - 300 > width) {
+          this.reset(false);
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.shadowColor = 'rgba(56, 189, 248, 0.2)';
+        ctx.shadowBlur = 20;
+        for (const p of this.puffs) {
+          ctx.beginPath();
+          ctx.arc(this.x + p.dx, this.y + p.dy, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // Stars/Twinkle Orbs in Sky
+    const stars = [];
+    const STAR_COUNT = 45;
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random(),
+        y: Math.random() * 0.7,
+        size: 0.8 + Math.random() * 1.8,
+        twinkleSpeed: 0.02 + Math.random() * 0.04,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    for (let i = 0; i < CLOUD_COUNT; i++) {
+      clouds.push(new Cloud());
+    }
+
+    let skyTime = 0;
+    function renderSky() {
+      skyTime += 0.01;
+      
+      // Dynamic Day-to-Dusk Gradient Atmosphere
+      const grad = skyCtx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, '#040d21');   // Deep Space Blue
+      grad.addColorStop(0.4, '#0c2340'); // Twilight Navy
+      grad.addColorStop(0.75, '#1e3a5f'); // Atmospheric Azure
+      grad.addColorStop(1, '#0b132b');   // Horizon Glow
+      
+      skyCtx.fillStyle = grad;
+      skyCtx.fillRect(0, 0, width, height);
+
+      // Draw Twinkling Stars
+      for (const s of stars) {
+        const alpha = 0.25 + 0.55 * Math.sin(skyTime * 2 + s.phase);
+        skyCtx.fillStyle = `rgba(224, 242, 254, ${alpha})`;
+        skyCtx.beginPath();
+        skyCtx.arc(s.x * width, s.y * height, s.size, 0, Math.PI * 2);
+        skyCtx.fill();
+      }
+
+      // Draw Floating Clouds
+      for (const cloud of clouds) {
+        cloud.update();
+        cloud.draw(skyCtx);
+      }
+
+      requestAnimationFrame(renderSky);
+    }
+    renderSky();
+
+    /* ==========================================================
+       2. SYNTHESIZED AUDIO ENGINE (WEB AUDIO API)
+       ========================================================== */
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+      }
+
+      playKeyStroke() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600 + Math.random() * 150, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      }
+
+      playErrorTone() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, now);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+
+      playVictoryChime() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const now = this.ctx.currentTime + idx * 0.09;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.28);
+        });
+      }
+
+      playButtonClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      }
+    }
+    const audio = new AudioEngine();
+
+    /* ==========================================================
+       3. CONFETTI CELEBRATION SYSTEM
+       ========================================================== */
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+
+    function resizeConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfetti);
+    resizeConfetti();
+
+    function triggerConfetti() {
+      confettiParticles = [];
+      const colors = ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ffffff'];
+      for (let i = 0; i < 120; i++) {
+        confettiParticles.push({
+          x: confettiCanvas.width / 2,
+          y: confettiCanvas.height / 2,
+          vx: (Math.random() - 0.5) * 18,
+          vy: (Math.random() - 0.7) * 20 - 4,
+          size: 5 + Math.random() * 8,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 12,
+          opacity: 1
+        });
+      }
+    }
+
+    function renderConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.45; // gravity
+        p.rotation += p.rotationSpeed;
+        p.opacity -= 0.012;
+
+        if (p.opacity <= 0) {
+          confettiParticles.splice(i, 1);
+          continue;
+        }
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate((p.rotation * Math.PI) / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.globalAlpha = p.opacity;
+        confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.2);
+        confettiCtx.restore();
+      }
+      requestAnimationFrame(renderConfetti);
+    }
+    renderConfetti();
+
+    /* ==========================================================
+       4. 100 PROGRESSIVE DIFFICULTY LEVELS (1 - 100)
+       ========================================================== */
+    // Curated seeds & procedural progressive challenges
+    const levelSentences = [
+      // 1 - 10: Pemula, kata santai, pendek
+      "kucing manis tidur lelap",
+      "matahari terbit di ufuk timur",
+      "langit biru cerah tanpa awan",
+      "angin sepoi membawa kesejukan",
+      "buku adalah jendela dunia",
+      "pohon rindang di taman kota",
+      "belajar mengetik dengan giat",
+      "secangkir teh hangat di pagi hari",
+      "langkah awal menuju kesuksesan",
+      "fokus dan ketenangan membawa hasil",
+
+      // 11 - 20: Kalimat sedang, tanda baca ringan
+      "Kecepatan jari akan terus bertambah seiring latihan.",
+      "Jangan terburu-buru, utamakan akurasi setiap ketukan.",
+      "Bintang bersinar terang menyinari pekatnya malam.",
+      "Sungai mengalir jernih menuju samudra luas membentang.",
+      "Petualangan baru telah dimulai di depan mata kita.",
+      "Teknologi modern mempermudah hidup manusia sehari-hari.",
+      "Piksel demi piksel membentuk gambar yang memukau mata.",
+      "Konsistensi adalah kunci utama dalam menguasai keahlian.",
+      "Suara gemercik air menenangkan pikiran yang penat.",
+      "Setiap huruf yang kamu ketik mengasah ketangkasan tangan.",
+
+      // 21 - 30: Variasi kosakata lebih beragam
+      "Puncak gunung yang tinggi selalu menawarkan pemandangan terindah.",
+      "Waktu terus bergulir cepat tanpa pernah menunggu siapa pun.",
+      "Keberanian untuk mencoba adalah langkah awal dari sebuah prestasi.",
+      "Pesawat terbang melintasi awan putih dengan keanggunan luar biasa.",
+      "Hutan hujan tropis menyimpan beribu jenis flora dan fauna langka.",
+      "Kecerdasan buatan kini mampu membantu berbagai pekerjaan rumit.",
+      "Kreativitas tanpa batas melahirkan inovasi yang mengubah peradaban.",
+      "Perpaduan warna jingga dan ungu menghiasi langit sore hari.",
+      "Ketelitian dalam membaca kode program mencegah terjadinya kesalahan.",
+      "Tantangan demi tantangan siap dihadapi dengan penuh percaya diri.",
+
+      // 31 - 40: Tanda baca koma, seru, dan tanda petik
+      "\"Keberhasilan bukan kebetulan, melainkan hasil kerja keras!\" serunya.",
+      "Ketika badai reda, pelangi yang indah akan menghiasi cakrawala luas.",
+      "Dengarkan detak jam dinding: tik, tok, tik, tok di keheningan malam.",
+      "Sahabat sejati adalah mereka yang selalu ada di kala duka maupun suka.",
+      "Perjalanan ribuan mil selalu dimulai dengan satu ayunan langkah kaki.",
+      "Pemandangan lembah hijau dari atas tebing sungguh memanjakan mata.",
+      "Apakah kamu sanggup mengetik seluruh kalimat ini tanpa satu kesalahan pun?",
+      "Inovasi tercipta saat ide cemerlang bertemu dengan ketekunan pantang menyerah.",
+      "Cahaya aurora menari di langit kutub utara dengan gemerlap spektakuler.",
+      "Jadikan setiap kegagalan sebagai batu loncatan berharga menuju kejayaan."
+    ];
+
+    // Generator for Levels 41-100 to guarantee all 100 levels are unique & escalate in difficulty!
+    const complexVocab = [
+      "Algoritma komputasi kuantum", "Karakteristik ekosistem digital", "Eksplorasi antariksa tanpa batas",
+      "Sistem kriptografi terdesentralisasi", "Konfigurasi arsitektur perangkat lunak", "Resonansi magnetik presisi tinggi",
+      "Harmonisasi nada melodi orkestra", "Transformasi teknologi revolusioner", "Filosofi ketenangan batin manusia"
+    ];
+
+    const connectorPhrases = [
+      "memberikan dampak signifikan bagi peradaban masa depan,",
+      "membutuhkan ketelitian luar biasa dan konsentrasi tanpa henti,",
+      "membuktikan bahwa dedikasi tinggi selalu membuahkan hasil gemilang,",
+      "menguji batasan kecepatan berpikir serta refleks motorik jari,",
+      "menginspirasi generasi penerus untuk terus berinovasi tiada henti,"
+    ];
+
+    const closingWisdom = [
+      "sebab kecepatan sejati lahir dari harmoni antara ketenangan dan ketepatan.",
+      "maka pertahankan ritme ketikanmu hingga baris terakhir tercapai sempurna!",
+      "dengan konsentrasi penuh, tidak ada level yang mustahil untuk ditaklukkan.",
+      "sebagai bukti ketangguhan sang pengetik nomor satu di jagat semesta."
+    ];
+
+    function getLevelText(lvl) {
+      if (lvl <= levelSentences.length) {
+        return levelSentences[lvl - 1];
+      }
+
+      // Procedurally generate levels 41 - 100 with escalating length and symbols
+      const vIdx = (lvl * 3 + 7) % complexVocab.length;
+      const cIdx = (lvl * 5 + 3) % connectorPhrases.length;
+      const wIdx = (lvl * 2 + 1) % closingWisdom.length;
+
+      let baseText = `Level ${lvl}: ${complexVocab[vIdx]} ${connectorPhrases[cIdx]} ${closingWisdom[wIdx]}`;
+
+      // Extra difficulty spice for higher levels
+      if (lvl >= 75) {
+        baseText += ` (Refleks: ${(lvl * 13) % 99 + 10}%, Akurasi: 100%).`;
+      } else if (lvl >= 55) {
+        baseText += ` Kecepatan target: ${50 + Math.floor(lvl / 2)} WPM.`;
+      }
+
+      return baseText;
+    }
+
+    /* ==========================================================
+       5. GAME STATE & LOCALSTORAGE PERSISTENCE
+       ========================================================== */
+    const STORAGE_KEY = 'typerspeed_v1_save';
+
+    let gameState = {
+      playerName: 'SpeedRacer',
+      currentLevel: 1,
+      unlockedLevel: 1,
+      completedLevels: {}, // level -> boolean
+      totalScore: 0,
+      leaderboard: [
+        { name: "CyberVolt", score: 25000, level: 100 },
+        { name: "SpeedDemon", score: 18250, level: 73 },
+        { name: "NeonTyper", score: 12500, level: 50 },
+        { name: "SwiftFinger", score: 8750, level: 35 },
+        { name: "QuantumKeys", score: 5000, level: 20 },
+        { name: "AeroStrike", score: 2500, level: 10 }
+      ]
+    };
+
+    function loadSavedData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          gameState.playerName = parsed.playerName || gameState.playerName;
+          gameState.currentLevel = parsed.currentLevel || 1;
+          gameState.unlockedLevel = parsed.unlockedLevel || 1;
+          gameState.completedLevels = parsed.completedLevels || {};
+          gameState.totalScore = parsed.totalScore || 0;
+          if (Array.isArray(parsed.leaderboard) && parsed.leaderboard.length > 0) {
+            gameState.leaderboard = parsed.leaderboard;
+          }
+        }
+      } catch (err) {
+        console.warn("Storage load error", err);
+      }
+    }
+
+    function saveGameData() {
+      try {
+        // Ensure player is represented in leaderboard
+        updateLeaderboardEntry();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+      } catch (err) {
+        console.warn("Storage save error", err);
+      }
+    }
+
+    function updateLeaderboardEntry() {
+      // Find or create player in leaderboard
+      const existing = gameState.leaderboard.find(p => p.name.toLowerCase() === gameState.playerName.toLowerCase());
+      if (existing) {
+        if (gameState.totalScore > existing.score) {
+          existing.score = gameState.totalScore;
+          existing.level = Math.max(existing.level, gameState.unlockedLevel);
+        }
+      } else {
+        gameState.leaderboard.push({
+          name: gameState.playerName,
+          score: gameState.totalScore,
+          level: gameState.unlockedLevel
+        });
+      }
+
+      // Sort descending by score
+      gameState.leaderboard.sort((a, b) => b.score - a.score);
+    }
+
+    /* ==========================================================
+       6. GAMEPLAY ENGINE & INTERACTION
+       ========================================================== */
+    let currentTargetText = "";
+    let currentIndex = 0;
+    let charStates = []; // 'pending', 'correct', 'wrong'
+    let levelStartTime = 0;
+    let levelTimerInterval = null;
+    let totalKeystrokes = 0;
+    let correctKeystrokes = 0;
+    let isGameRunning = false;
+
+    // UI Element references
+    const lobbyScreen = document.getElementById('lobby-screen');
+    const gameplayScreen = document.getElementById('gameplay-screen');
+    const victoryModal = document.getElementById('victory-modal');
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const levelsModal = document.getElementById('levels-modal');
+
+    const playerNameInput = document.getElementById('player-name-input');
+    const playerLobbyScore = document.getElementById('player-lobby-score');
+    const gameCurrentLevel = document.getElementById('game-current-level');
+    const gameWpm = document.getElementById('game-wpm');
+    const gameAccuracy = document.getElementById('game-accuracy');
+    const gameScore = document.getElementById('game-score');
+    const gameProgressBar = document.getElementById('game-progress-bar');
+    const textDisplay = document.getElementById('text-display');
+    const hiddenInput = document.getElementById('hidden-input');
+
+    // Setup initial state
+    loadSavedData();
+    playerNameInput.value = gameState.playerName;
+    playerLobbyScore.innerText = gameState.totalScore.toLocaleString();
+
+    playerNameInput.addEventListener('change', (e) => {
+      const val = e.target.value.trim();
+      if (val) {
+        gameState.playerName = val;
+        saveGameData();
+      }
+    });
+
+    // Sound toggle
+    const soundToggle = document.getElementById('sound-toggle');
+    const soundIconOn = document.getElementById('sound-icon-on');
+    const soundIconOff = document.getElementById('sound-icon-off');
+
+    soundToggle.addEventListener('click', () => {
+      audio.enabled = !audio.enabled;
+      soundIconOn.style.display = audio.enabled ? 'block' : 'none';
+      soundIconOff.style.display = audio.enabled ? 'none' : 'block';
+      if (audio.enabled) audio.playButtonClick();
+    });
+
+    let charSpans = [];
+    let lastKeydownHandledTime = 0;
+
+    /* --- Navigation Functions --- */
+    function showScreen(screen) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      screen.classList.add('active');
+    }
+
+    function startLevel(levelNum) {
+      if (levelNum > 100) levelNum = 100;
+      gameState.currentLevel = levelNum;
+      
+      currentTargetText = getLevelText(levelNum);
+      currentIndex = 0;
+      totalKeystrokes = 0;
+      correctKeystrokes = 0;
+      isGameRunning = true;
+      levelStartTime = Date.now();
+
+      // Update HUD
+      gameCurrentLevel.innerText = levelNum;
+      gameWpm.innerText = "0";
+      gameAccuracy.innerText = "100%";
+      gameScore.innerText = gameState.totalScore.toLocaleString();
+      gameProgressBar.style.width = "0%";
+
+      // Build spans ONCE for butter-smooth performance
+      charSpans = [];
+      textDisplay.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+
+      for (let i = 0; i < currentTargetText.length; i++) {
+        const span = document.createElement('span');
+        const isSpace = currentTargetText[i] === ' ';
+        span.className = 'char pending' + (isSpace ? ' space' : '') + (i === 0 ? ' current' : '');
+        span.textContent = currentTargetText[i];
+        charSpans.push(span);
+        fragment.appendChild(span);
+      }
+      textDisplay.appendChild(fragment);
+
+      showScreen(gameplayScreen);
+
+      // Focus hidden input for mobile/desktop
+      setTimeout(() => {
+        hiddenInput.value = "";
+        hiddenInput.focus();
+      }, 50);
+
+      // Start metrics tick
+      if (levelTimerInterval) clearInterval(levelTimerInterval);
+      levelTimerInterval = setInterval(updateLiveMetrics, 200);
+
+      audio.playButtonClick();
+    }
+
+    function updateLiveMetrics() {
+      if (!isGameRunning) return;
+      const elapsedMinutes = (Date.now() - levelStartTime) / 60000;
+      if (elapsedMinutes > 0 && currentIndex > 0) {
+        const words = correctKeystrokes / 5;
+        const wpm = Math.round(words / elapsedMinutes);
+        gameWpm.innerText = Math.max(0, wpm);
+      }
+
+      if (totalKeystrokes > 0) {
+        const acc = Math.round((correctKeystrokes / totalKeystrokes) * 100);
+        gameAccuracy.innerText = `${acc}%`;
+      }
+
+      // Progress bar
+      const progressPercent = Math.min(100, Math.round((currentIndex / currentTargetText.length) * 100));
+      gameProgressBar.style.width = `${progressPercent}%`;
+    }
+
+    function handleUserInput(key) {
+      if (!isGameRunning || currentIndex >= currentTargetText.length) return;
+
+      totalKeystrokes++;
+      const expectedChar = currentTargetText[currentIndex];
+      const span = charSpans[currentIndex];
+      const isSpace = expectedChar === ' ';
+
+      if (key === expectedChar) {
+        span.className = 'char correct' + (isSpace ? ' space' : '');
+        correctKeystrokes++;
+        audio.playKeyStroke();
+      } else {
+        span.className = 'char wrong' + (isSpace ? ' space' : '');
+        audio.playErrorTone();
+      }
+
+      currentIndex++;
+      updateLiveMetrics();
+
+      if (currentIndex < currentTargetText.length) {
+        const nextSpan = charSpans[currentIndex];
+        const nextIsSpace = currentTargetText[currentIndex] === ' ';
+        nextSpan.className = 'char pending current' + (nextIsSpace ? ' space' : '');
+        nextSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        finishLevel();
+      }
+    }
+
+    function handleBackspace() {
+      if (!isGameRunning || currentIndex <= 0) return;
+
+      // Remove current cursor from forward index if inside bounds
+      if (currentIndex < currentTargetText.length) {
+        const forwardIsSpace = currentTargetText[currentIndex] === ' ';
+        charSpans[currentIndex].className = 'char pending' + (forwardIsSpace ? ' space' : '');
+      }
+
+      currentIndex--;
+      const prevSpan = charSpans[currentIndex];
+      const prevIsSpace = currentTargetText[currentIndex] === ' ';
+      prevSpan.className = 'char pending current' + (prevIsSpace ? ' space' : '');
+      prevSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      audio.playKeyStroke();
+      updateLiveMetrics();
+    }
+
+    function finishLevel() {
+      isGameRunning = false;
+      if (levelTimerInterval) clearInterval(levelTimerInterval);
+
+      const elapsedSec = ((Date.now() - levelStartTime) / 1000).toFixed(1);
+      const elapsedMin = (Date.now() - levelStartTime) / 60000;
+      const finalWpm = Math.round((correctKeystrokes / 5) / Math.max(elapsedMin, 0.05));
+      const finalAcc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+
+      // Award 250 points per level
+      gameState.totalScore += 250;
+      gameState.completedLevels[gameState.currentLevel] = true;
+
+      if (gameState.currentLevel >= gameState.unlockedLevel && gameState.unlockedLevel < 100) {
+        gameState.unlockedLevel = gameState.currentLevel + 1;
+      }
+
+      saveGameData();
+
+      // Update Victory Modal Elements
+      document.getElementById('victory-wpm').innerText = `${finalWpm} WPM`;
+      document.getElementById('victory-acc').innerText = `${finalAcc}%`;
+      document.getElementById('victory-time').innerText = `${elapsedSec}s`;
+
+      audio.playVictoryChime();
+      triggerConfetti();
+
+      victoryModal.classList.add('active');
+    }
+
+    /* --- Keyboard & Input Listeners --- */
+    window.addEventListener('keydown', (e) => {
+      // Don't intercept typing if user is editing their player name
+      if (document.activeElement === playerNameInput) return;
+
+      // If victory or leaderboard or levels modal is open, ignore
+      if (victoryModal.classList.contains('active') ||
+          leaderboardModal.classList.contains('active') ||
+          levelsModal.classList.contains('active')) {
+        return;
+      }
+
+      // If in gameplay screen, handle typing
+      if (gameplayScreen.classList.contains('active')) {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          return;
+        }
+
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          lastKeydownHandledTime = performance.now();
+          handleBackspace();
+          return;
+        }
+
+        if (e.key.length === 1) {
+          e.preventDefault(); // Prevents window scroll on space and prevents double input in hiddenInput
+          lastKeydownHandledTime = performance.now();
+          handleUserInput(e.key);
+          return;
+        }
+      }
+    });
+
+    // Touch & Arena click focus
+    document.getElementById('typing-arena').addEventListener('click', () => {
+      hiddenInput.focus();
+    });
+
+    hiddenInput.addEventListener('input', (e) => {
+      // If keydown already processed within 60ms, ignore duplicate
+      if (performance.now() - lastKeydownHandledTime < 60) {
+        hiddenInput.value = "";
+        return;
+      }
+
+      if (e.inputType === 'deleteContentBackward') {
+        handleBackspace();
+      } else if (e.data) {
+        for (const ch of e.data) {
+          handleUserInput(ch);
+        }
+      }
+      hiddenInput.value = "";
+    });
+
+    /* ==========================================================
+       7. BUTTON ACTIONS (EXIT, RESTART, CONTINUE, PLAY, ETC.)
+       ========================================================== */
+    // Main Play Button in Center of Lobby
+    document.getElementById('btn-play-game').addEventListener('click', () => {
+      audio.init();
+      startLevel(gameState.unlockedLevel || 1);
+    });
+
+    // Pause/Exit button from HUD in gameplay
+    document.getElementById('btn-pause-exit').addEventListener('click', () => {
+      audio.playButtonClick();
+      isGameRunning = false;
+      if (levelTimerInterval) clearInterval(levelTimerInterval);
+      showScreen(lobbyScreen);
+      playerLobbyScore.innerText = gameState.totalScore.toLocaleString();
+    });
+
+    // Victory 3 Buttons: Exit, Restart, Continue
+    document.getElementById('btn-victory-exit').addEventListener('click', () => {
+      audio.playButtonClick();
+      victoryModal.classList.remove('active');
+      showScreen(lobbyScreen);
+      playerLobbyScore.innerText = gameState.totalScore.toLocaleString();
+    });
+
+    document.getElementById('btn-victory-restart').addEventListener('click', () => {
+      audio.playButtonClick();
+      victoryModal.classList.remove('active');
+      startLevel(gameState.currentLevel);
+    });
+
+    document.getElementById('btn-victory-continue').addEventListener('click', () => {
+      audio.playButtonClick();
+      victoryModal.classList.remove('active');
+      const nextLvl = gameState.currentLevel + 1;
+      if (nextLvl <= 100) {
+        startLevel(nextLvl);
+      } else {
+        // 100 Levels completed!
+        alert("🎉 SELAMAT! Kamu telah menamatkan seluruh 100 Level Typerspeed!");
+        showScreen(lobbyScreen);
+      }
+    });
+
+    /* ==========================================================
+       8. LEADERBOARD SYSTEM (SORTED BY HIGHEST POINTS)
+       ========================================================== */
+    function populateLeaderboard() {
+      updateLeaderboardEntry();
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = "";
+
+      gameState.leaderboard.forEach((entry, idx) => {
+        const row = document.createElement('tr');
+        const isCurrentPlayer = entry.name.toLowerCase() === gameState.playerName.toLowerCase();
+        if (isCurrentPlayer) {
+          row.classList.add('is-me');
+        }
+
+        const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+        const medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+
+        row.innerHTML = `
+          <td class="rank-cell ${rankClass}">${medal} ${idx + 1}</td>
+          <td>
+            <div class="player-cell">
+              <span>${escapeHtml(entry.name)}</span>
+              ${isCurrentPlayer ? '<span style="font-size:0.7rem; background:#38bdf8; color:#000; padding:1px 6px; border-radius:8px; font-weight:800;">KAMU</span>' : ''}
+            </div>
+          </td>
+          <td style="text-align: center; color: #94a3b8;">Lv. ${entry.level}</td>
+          <td class="score-cell">${entry.score.toLocaleString()} Pts</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    document.getElementById('btn-open-leaderboard').addEventListener('click', () => {
+      audio.playButtonClick();
+      populateLeaderboard();
+      leaderboardModal.classList.add('active');
+    });
+
+    document.getElementById('btn-close-leaderboard').addEventListener('click', () => {
+      audio.playButtonClick();
+      leaderboardModal.classList.remove('active');
+    });
+
+    /* ==========================================================
+       9. LEVEL SELECTOR MODAL (1 - 100)
+       ========================================================== */
+    function buildLevelsGrid() {
+      const container = document.getElementById('levels-container');
+      container.innerHTML = "";
+
+      for (let lvl = 1; lvl <= 100; lvl++) {
+        const chip = document.createElement('div');
+        chip.className = 'level-chip';
+        chip.innerText = lvl;
+
+        const isCompleted = !!gameState.completedLevels[lvl];
+        const isUnlocked = lvl <= gameState.unlockedLevel;
+        const isCurrent = lvl === gameState.currentLevel;
+
+        if (isCompleted) chip.classList.add('completed');
+        if (isCurrent) chip.classList.add('current-active');
+        if (!isUnlocked) {
+          chip.classList.add('locked');
+          chip.title = `Level ${lvl} masih terkunci. Selesaikan level sebelumnya!`;
+        } else {
+          chip.title = `Mulai Level ${lvl}`;
+          chip.addEventListener('click', () => {
+            audio.playButtonClick();
+            levelsModal.classList.remove('active');
+            startLevel(lvl);
+          });
+        }
+
+        container.appendChild(chip);
+      }
+    }
+
+    document.getElementById('btn-open-levels').addEventListener('click', () => {
+      audio.playButtonClick();
+      buildLevelsGrid();
+      levelsModal.classList.add('active');
+    });
+
+    document.getElementById('btn-close-levels').addEventListener('click', () => {
+      audio.playButtonClick();
+      levelsModal.classList.remove('active');
+    });
+
+    // Close modals on clicking background overlay
+    [victoryModal, leaderboardModal, levelsModal].forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal && modal !== victoryModal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
