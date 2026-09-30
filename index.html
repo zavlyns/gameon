@@ -149,42 +149,577 @@
       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     }
 
-    .player-profile-bar {
+    /* --- LOBBY AUTH & PROFILE SYSTEM --- */
+    .lobby-auth-section {
+      width: 100%;
+      max-width: 540px;
+      margin-bottom: 24px;
+      z-index: 5;
+    }
+
+    .lobby-login-card {
+      padding: 16px 20px;
+      border-radius: 20px;
+      text-align: center;
+      background: rgba(13, 23, 42, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.12);
+      animation: authCardFade 0.4s ease;
+    }
+
+    .login-card-header {
+      margin-bottom: 12px;
+    }
+
+    .login-card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .login-card-title {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    .auth-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .btn-auth {
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 8px 18px;
-      border-radius: 999px;
-      margin-bottom: 28px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-    }
-
-    .player-profile-bar span {
-      color: var(--text-muted);
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
       font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      font-family: inherit;
     }
 
-    .player-profile-bar input {
-      background: transparent;
-      border: none;
-      outline: none;
+    .btn-auth .auth-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .btn-auth-google {
+      background: #ffffff;
+      color: #1e293b;
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-auth-google:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.45);
+      background: #f8fafc;
+    }
+
+    .btn-auth-facebook {
+      background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(24, 119, 242, 0.35);
+    }
+
+    .btn-auth-facebook:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(24, 119, 242, 0.55);
+      background: linear-gradient(135deg, #1d88ff 0%, #1877f2 100%);
+    }
+
+    .btn-auth-guest {
+      background: rgba(148, 163, 184, 0.15);
+      color: #f1f5f9;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-auth-guest:hover {
+      transform: translateY(-2px);
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
       color: #38bdf8;
-      font-size: 1.05rem;
-      font-weight: 700;
-      font-family: inherit;
-      width: 140px;
+      box-shadow: 0 8px 25px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Logged In Player Profile Card */
+    .lobby-user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 22px rgba(56, 189, 248, 0.15);
+      animation: authCardFade 0.4s ease;
+    }
+
+    .user-avatar-container {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .user-avatar-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(16, 185, 129, 0.3));
+      border: 2px solid #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .provider-badge-icon {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 1.5px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .provider-badge-icon svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .user-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
       text-align: left;
     }
 
-    .player-score-tag {
-      background: rgba(56, 189, 248, 0.2);
+    .user-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-display-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
+    }
+
+    .provider-pill {
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .provider-pill.google { background: rgba(66, 133, 244, 0.25); color: #93c5fd; border: 1px solid rgba(66, 133, 244, 0.4); }
+    .provider-pill.facebook { background: rgba(24, 119, 242, 0.25); color: #bfdbfe; border: 1px solid rgba(24, 119, 242, 0.4); }
+    .provider-pill.guest { background: rgba(148, 163, 184, 0.25); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.4); }
+
+    .user-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .account-meta {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .user-stats-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 8px;
+      border-radius: 999px;
       color: #e0f2fe;
-      padding: 4px 10px;
+      font-size: 0.78rem;
+    }
+
+    .user-stats-pill strong {
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .user-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-card-action {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
       border-radius: 12px;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(30, 41, 59, 0.7);
+      color: #cbd5e1;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-card-action svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
+    }
+
+    .btn-edit-name:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    .btn-logout-action:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      color: #fca5a5;
+      transform: translateY(-2px);
+    }
+
+    /* Auth Dialog Modals */
+    .google-auth-content {
+      background: #ffffff !important;
+      color: #1f2937 !important;
+      border-radius: 24px;
+      max-width: 440px !important;
+      padding: 32px 28px !important;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+      border: none !important;
+    }
+
+    .google-auth-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .google-accounts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .google-account-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    .google-account-btn:hover {
+      background: #f3f4f6;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .google-avatar-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #4285F4;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .google-acc-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #111827;
+    }
+
+    .google-acc-email {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    /* Facebook Modal Content */
+    .facebook-auth-content {
+      background: #141f36 !important;
+      border: 1px solid rgba(24, 119, 242, 0.45) !important;
+      border-radius: 24px;
+      max-width: 440px !important;
+      padding: 32px 28px !important;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(24, 119, 242, 0.25);
+    }
+
+    .facebook-auth-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .facebook-logo-badge {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #1877f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px rgba(24, 119, 242, 0.5);
+    }
+
+    /* Auth Loader Container */
+    .auth-loader-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 28px 16px;
+    }
+
+    .auth-spinner {
+      width: 42px;
+      height: 42px;
+      border: 3.5px solid rgba(56, 189, 248, 0.2);
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spinLoader 0.75s infinite linear;
+    }
+
+    .auth-spinner.google-spinner {
+      border: 3.5px solid #e5e7eb;
+      border-top-color: #4285F4;
+    }
+
+    .auth-spinner.facebook-spinner {
+      border: 3.5px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #1877f2;
+    }
+
+    @keyframes spinLoader {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes authCardFade {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Username Setup Modal (Post-Login) */
+    .username-modal-content {
+      max-width: 560px !important;
+      padding: 36px 32px !important;
+      text-align: center;
+    }
+
+    .username-modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #34d399;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .avatar-selection-label {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .avatar-choice {
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .avatar-choice:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: rgba(56, 189, 248, 0.5);
+      transform: scale(1.1);
+    }
+
+    .avatar-choice.active {
+      background: rgba(56, 189, 248, 0.3);
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.65);
+      transform: scale(1.12);
+    }
+
+    .username-input-wrapper {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .username-input-field {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      padding: 13px 18px;
+      color: #ffffff;
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .username-input-field:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-dice-random {
+      padding: 12px 18px;
+      border-radius: 14px;
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: #e2e8f0;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-dice-random:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .username-input-hints {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      padding: 0 4px;
+    }
+
+    .username-validation-msg {
+      color: #ef4444;
+      font-weight: 600;
+      display: none;
+    }
+
+    .btn-save-username {
+      width: 100%;
+      padding: 15px 24px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%);
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.45);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: inherit;
+    }
+
+    .btn-save-username:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.6);
     }
 
     /* Giant Play Button */
@@ -417,6 +952,8 @@
       min-height: 240px;
       display: flex;
       flex-direction: column;
+    }
+
     .text-display {
       font-family: 'JetBrains Mono', monospace;
       font-size: 1.85rem;
@@ -868,12 +1405,71 @@
         <p class="game-tagline">Tantang jemarimu menaklukkan 100 level dari pemula hingga master pengetik tercepat!</p>
       </div>
 
-      <!-- Player Profile Bar -->
-      <div class="player-profile-bar">
-        <span>Pemain:</span>
-        <input type="text" id="player-name-input" maxlength="15" value="SpeedRacer" title="Klik untuk mengubah nama">
-        <div class="player-score-tag">
-          <span id="player-lobby-score">0</span> Pts
+      <!-- Lobby Auth & Profile Section -->
+      <div id="lobby-auth-section" class="lobby-auth-section">
+        <!-- State 1: When user is NOT logged in -->
+        <div id="lobby-login-card" class="lobby-login-card glass-card">
+          <div class="login-card-header">
+            <span class="login-card-badge">🔐 Akses Akun</span>
+            <p class="login-card-title">Masuk untuk Menyimpan Skor & Peringkat Global</p>
+          </div>
+          <div class="auth-buttons-grid">
+            <button id="btn-login-google" class="btn-auth btn-auth-google" title="Masuk dengan akun Google">
+              <svg class="auth-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>Google</span>
+            </button>
+            <button id="btn-login-facebook" class="btn-auth btn-auth-facebook" title="Masuk dengan akun Facebook">
+              <svg class="auth-icon" viewBox="0 0 24 24" fill="#ffffff">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              <span>Facebook</span>
+            </button>
+            <button id="btn-login-guest" class="btn-auth btn-auth-guest" title="Bermain langsung sebagai Tamu">
+              <svg class="auth-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+              </svg>
+              <span>Guest</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- State 2: When user IS logged in -->
+        <div id="lobby-user-card" class="lobby-user-card glass-card" style="display: none;">
+          <div class="user-avatar-container">
+            <div id="user-avatar-display" class="user-avatar-circle">🚀</div>
+            <div id="user-provider-badge" class="provider-badge-icon google" title="Akun Google">
+              <!-- Dynamically populated provider icon -->
+            </div>
+          </div>
+          <div class="user-details">
+            <div class="user-name-row">
+              <span id="lobby-display-username" class="user-display-name">SpeedRacer</span>
+              <span id="lobby-provider-pill" class="provider-pill google">Google</span>
+            </div>
+            <div class="user-meta-row">
+              <span id="lobby-account-meta" class="account-meta">user@gmail.com</span>
+              <div class="user-stats-pill">
+                <span class="stat-score"><strong id="player-lobby-score">0</strong> Pts</span>
+                <span class="stat-sep">•</span>
+                <span class="stat-level">Lv. <strong id="player-lobby-level">1</strong></span>
+              </div>
+            </div>
+          </div>
+          <div class="user-card-actions">
+            <button id="btn-edit-username" class="btn-card-action btn-edit-name" title="Ubah Username & Avatar">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <span>Ubah Nama</span>
+            </button>
+            <button id="btn-logout" class="btn-card-action btn-logout-action" title="Ganti Akun / Logout">
+              <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              <span>Ganti Akun</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1053,6 +1649,150 @@
       <div style="display: flex; justify-content: flex-end;">
         <button id="btn-close-levels" class="btn-secondary" style="width: 100%;">Tutup</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 6. GOOGLE SIGN-IN MODAL -->
+  <div id="modal-google-auth" class="modal-overlay">
+    <div class="modal-content google-auth-content">
+      <div id="google-auth-selector">
+        <div class="google-auth-header">
+          <svg style="width: 40px; height: 40px;" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <h3 style="font-size: 1.35rem; font-weight: 700; color: #1f2937; margin-bottom: 2px;">Sign in with Google</h3>
+          <p style="font-size: 0.88rem; color: #6b7280;">Pilih akun untuk melanjutkan ke <strong>Typerspeed</strong></p>
+        </div>
+
+        <div class="google-accounts-list">
+          <button class="google-account-btn" data-email="alex.gamer@gmail.com" data-name="Alex Gamer">
+            <div class="google-avatar-icon" style="background:#ea4335;">A</div>
+            <div>
+              <div class="google-acc-name">Alex Gamer</div>
+              <div class="google-acc-email">alex.gamer@gmail.com</div>
+            </div>
+          </button>
+          <button class="google-account-btn" data-email="speed.typer@gmail.com" data-name="Speed Typer">
+            <div class="google-avatar-icon" style="background:#4285f4;">S</div>
+            <div>
+              <div class="google-acc-name">Speed Typer</div>
+              <div class="google-acc-email">speed.typer@gmail.com</div>
+            </div>
+          </button>
+        </div>
+
+        <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px;">
+          <input type="text" id="google-custom-email" placeholder="Atau masukkan email Google kamu..." style="flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 0.85rem; outline: none; color: #111827; font-family: inherit;">
+          <button id="btn-google-custom-login" style="padding: 10px 16px; background: #4285f4; color: #fff; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.85rem; font-family: inherit;">Masuk</button>
+        </div>
+
+        <button id="btn-close-google-auth" style="margin-top: 16px; width: 100%; background: none; border: none; color: #9ca3af; font-size: 0.85rem; cursor: pointer; padding: 6px;">Batal</button>
+      </div>
+
+      <!-- Loading state -->
+      <div id="google-auth-loader" class="auth-loader-container">
+        <div class="auth-spinner google-spinner"></div>
+        <p style="font-weight: 700; color: #374151; font-size: 0.95rem;">Menghubungkan ke Akun Google...</p>
+        <span style="font-size: 0.8rem; color: #9ca3af;">Memverifikasi izin akses Typerspeed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. FACEBOOK SIGN-IN MODAL -->
+  <div id="modal-facebook-auth" class="modal-overlay">
+    <div class="modal-content facebook-auth-content">
+      <div id="facebook-auth-selector">
+        <div class="facebook-auth-header">
+          <div class="facebook-logo-badge">
+            <svg style="width: 32px; height: 32px;" viewBox="0 0 24 24" fill="#ffffff">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </div>
+          <h3 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Masuk dengan Facebook</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8; max-width: 340px;">Typerspeed akan menerima nama profil dan email publik Anda.</p>
+        </div>
+
+        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: #1877f2; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">👤</div>
+          <div style="flex: 1; text-align: left;">
+            <div id="facebook-profile-name" style="font-weight: 700; color: #fff; font-size: 1rem;">Alex Facebook</div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">facebook.com/alex.gaming</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="btn-confirm-facebook-login" class="btn-auth btn-auth-facebook" style="width: 100%; padding: 13px; font-size: 1rem;">
+            Lanjutkan sebagai Alex
+          </button>
+          <button id="btn-close-facebook-auth" class="btn-secondary" style="width: 100%; justify-content: center; font-size: 0.9rem;">
+            Batal
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="facebook-auth-loader" class="auth-loader-container">
+        <div class="auth-spinner facebook-spinner"></div>
+        <p style="font-weight: 700; color: #fff; font-size: 0.95rem;">Menghubungkan ke Facebook...</p>
+        <span style="font-size: 0.8rem; color: #94a3b8;">Mengautentikasi kredensial pengguna</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. USERNAME SETUP & AVATAR MODAL (POST-LOGIN) -->
+  <div id="modal-username" class="modal-overlay">
+    <div class="modal-content glass-card username-modal-content">
+      <div class="username-modal-badge">
+        <span>✨ LOGIN BERHASIL</span>
+      </div>
+
+      <h2 class="modal-title" style="font-size: 1.9rem; margin-bottom: 6px;">Tentukan Username Kamu</h2>
+      <p class="modal-subtitle" style="margin-bottom: 20px; font-size: 0.95rem;">
+        Terhubung via <strong id="username-modal-provider-name" style="color: #38bdf8;">Google</strong>! Silakan pilih avatar dan username yang akan ditampilkan di Leaderboard Global.
+      </p>
+
+      <div class="avatar-selection-label">
+        <span>Pilih Avatar:</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Klik salah satu</span>
+      </div>
+
+      <div id="avatar-picker-grid" class="avatar-grid">
+        <div class="avatar-choice active" data-avatar="🚀">🚀</div>
+        <div class="avatar-choice" data-avatar="⚡">⚡</div>
+        <div class="avatar-choice" data-avatar="🎮">🎮</div>
+        <div class="avatar-choice" data-avatar="👑">👑</div>
+        <div class="avatar-choice" data-avatar="🦊">🦊</div>
+        <div class="avatar-choice" data-avatar="🐉">🐉</div>
+        <div class="avatar-choice" data-avatar="🤖">🤖</div>
+        <div class="avatar-choice" data-avatar="💎">💎</div>
+      </div>
+
+      <div style="text-align: left; margin-bottom: 8px;">
+        <label for="input-custom-username" style="font-size: 0.88rem; font-weight: 600; color: #cbd5e1;">Username Pemain:</label>
+      </div>
+
+      <div class="username-input-wrapper">
+        <input type="text" id="input-custom-username" class="username-input-field" maxlength="15" placeholder="Ketik nama username impianmu..." autocomplete="off">
+        <button id="btn-random-username" class="btn-dice-random" title="Dapatkan nama keren acak">
+          🎲 Acak
+        </button>
+      </div>
+
+      <div class="username-input-hints">
+        <span id="username-validation-msg" class="username-validation-msg">Username minimal 3 karakter!</span>
+        <span style="flex: 1;"></span>
+        <span id="username-char-count">0/15</span>
+      </div>
+
+      <button id="btn-save-username" class="btn-save-username">
+        <span>Simpan & Masuk ke Game</span>
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -1426,18 +2166,22 @@
     const STORAGE_KEY = 'typerspeed_v1_save';
 
     let gameState = {
+      isLoggedIn: false,
+      authProvider: null, // 'google' | 'facebook' | 'guest'
+      authEmail: '',
       playerName: 'SpeedRacer',
+      avatar: '🚀',
       currentLevel: 1,
       unlockedLevel: 1,
       completedLevels: {}, // level -> boolean
       totalScore: 0,
       leaderboard: [
-        { name: "CyberVolt", score: 25000, level: 100 },
-        { name: "SpeedDemon", score: 18250, level: 73 },
-        { name: "NeonTyper", score: 12500, level: 50 },
-        { name: "SwiftFinger", score: 8750, level: 35 },
-        { name: "QuantumKeys", score: 5000, level: 20 },
-        { name: "AeroStrike", score: 2500, level: 10 }
+        { name: "CyberVolt", score: 25000, level: 100, avatar: '🤖' },
+        { name: "SpeedDemon", score: 18250, level: 73, avatar: '⚡' },
+        { name: "NeonTyper", score: 12500, level: 50, avatar: '👑' },
+        { name: "SwiftFinger", score: 8750, level: 35, avatar: '🦊' },
+        { name: "QuantumKeys", score: 5000, level: 20, avatar: '💎' },
+        { name: "AeroStrike", score: 2500, level: 10, avatar: '🎯' }
       ]
     };
 
@@ -1446,6 +2190,10 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
+          if (parsed.isLoggedIn !== undefined) gameState.isLoggedIn = !!parsed.isLoggedIn;
+          if (parsed.authProvider) gameState.authProvider = parsed.authProvider;
+          if (parsed.authEmail) gameState.authEmail = parsed.authEmail;
+          if (parsed.avatar) gameState.avatar = parsed.avatar;
           gameState.playerName = parsed.playerName || gameState.playerName;
           gameState.currentLevel = parsed.currentLevel || 1;
           gameState.unlockedLevel = parsed.unlockedLevel || 1;
@@ -1478,11 +2226,13 @@
           existing.score = gameState.totalScore;
           existing.level = Math.max(existing.level, gameState.unlockedLevel);
         }
+        existing.avatar = gameState.avatar || '🚀';
       } else {
         gameState.leaderboard.push({
           name: gameState.playerName,
           score: gameState.totalScore,
-          level: gameState.unlockedLevel
+          level: gameState.unlockedLevel,
+          avatar: gameState.avatar || '🚀'
         });
       }
 
@@ -1509,8 +2259,35 @@
     const leaderboardModal = document.getElementById('leaderboard-modal');
     const levelsModal = document.getElementById('levels-modal');
 
-    const playerNameInput = document.getElementById('player-name-input');
+    // Lobby Auth UI References
+    const lobbyLoginCard = document.getElementById('lobby-login-card');
+    const lobbyUserCard = document.getElementById('lobby-user-card');
+    const userAvatarDisplay = document.getElementById('user-avatar-display');
+    const userProviderBadge = document.getElementById('user-provider-badge');
+    const lobbyDisplayUsername = document.getElementById('lobby-display-username');
+    const lobbyProviderPill = document.getElementById('lobby-provider-pill');
+    const lobbyAccountMeta = document.getElementById('lobby-account-meta');
     const playerLobbyScore = document.getElementById('player-lobby-score');
+    const playerLobbyLevel = document.getElementById('player-lobby-level');
+    const btnEditUsername = document.getElementById('btn-edit-username');
+    const btnLogout = document.getElementById('btn-logout');
+
+    const btnLoginGoogle = document.getElementById('btn-login-google');
+    const btnLoginFacebook = document.getElementById('btn-login-facebook');
+    const btnLoginGuest = document.getElementById('btn-login-guest');
+
+    // Modals
+    const modalGoogleAuth = document.getElementById('modal-google-auth');
+    const modalFacebookAuth = document.getElementById('modal-facebook-auth');
+    const modalUsername = document.getElementById('modal-username');
+    const usernameModalProviderName = document.getElementById('username-modal-provider-name');
+    const inputCustomUsername = document.getElementById('input-custom-username');
+    const btnRandomUsername = document.getElementById('btn-random-username');
+    const usernameCharCount = document.getElementById('username-char-count');
+    const usernameValidationMsg = document.getElementById('username-validation-msg');
+    const btnSaveUsername = document.getElementById('btn-save-username');
+    const avatarPickerGrid = document.getElementById('avatar-picker-grid');
+
     const gameCurrentLevel = document.getElementById('game-current-level');
     const gameWpm = document.getElementById('game-wpm');
     const gameAccuracy = document.getElementById('game-accuracy');
@@ -1519,18 +2296,235 @@
     const textDisplay = document.getElementById('text-display');
     const hiddenInput = document.getElementById('hidden-input');
 
-    // Setup initial state
-    loadSavedData();
-    playerNameInput.value = gameState.playerName;
-    playerLobbyScore.innerText = gameState.totalScore.toLocaleString();
+    let pendingAuth = {
+      provider: 'google',
+      email: '',
+      suggestedName: ''
+    };
+    let currentSelectedAvatar = '🚀';
 
-    playerNameInput.addEventListener('change', (e) => {
-      const val = e.target.value.trim();
-      if (val) {
-        gameState.playerName = val;
-        saveGameData();
+    // Renders Lobby Auth and User profile
+    function renderLobbyAuth() {
+      if (gameState.isLoggedIn) {
+        lobbyLoginCard.style.display = 'none';
+        lobbyUserCard.style.display = 'flex';
+
+        currentSelectedAvatar = gameState.avatar || '🚀';
+        userAvatarDisplay.innerText = currentSelectedAvatar;
+        lobbyDisplayUsername.innerText = gameState.playerName;
+
+        const prov = (gameState.authProvider || 'google').toLowerCase();
+        lobbyProviderPill.className = `provider-pill ${prov}`;
+
+        let provLabel = 'Google';
+        let badgeSvg = '';
+        if (prov === 'google') {
+          provLabel = 'Google';
+          badgeSvg = `<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.92 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>`;
+        } else if (prov === 'facebook') {
+          provLabel = 'Facebook';
+          badgeSvg = `<svg viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`;
+        } else {
+          provLabel = 'Guest';
+          badgeSvg = `<svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>`;
+        }
+
+        lobbyProviderPill.innerText = provLabel;
+        userProviderBadge.innerHTML = badgeSvg;
+        lobbyAccountMeta.innerText = gameState.authEmail || (prov === 'guest' ? 'Mode Tamu' : 'Akun Terhubung');
+        playerLobbyLevel.innerText = gameState.unlockedLevel || 1;
+        playerLobbyScore.innerText = gameState.totalScore.toLocaleString();
+      } else {
+        lobbyLoginCard.style.display = 'block';
+        lobbyUserCard.style.display = 'none';
+        playerLobbyScore.innerText = gameState.totalScore.toLocaleString();
+      }
+    }
+
+    // Cool random gamer handles
+    const coolHandles = [
+      "SpeedNova", "CyberFlash", "NeonTyper", "ShadowKeys", "TurboViper",
+      "ApexGhost", "QuantumDrift", "BlazeRacer", "PixelStorm", "SwiftEcho",
+      "VoltHunter", "AeroStrike", "HyperMatrix", "StarGlider", "ZeroLag"
+    ];
+
+    function getRandomHandle() {
+      return coolHandles[Math.floor(Math.random() * coolHandles.length)] + Math.floor(10 + Math.random() * 89);
+    }
+
+    function openUsernameModal(provider, email, defaultName) {
+      pendingAuth.provider = provider;
+      pendingAuth.email = email;
+      pendingAuth.suggestedName = defaultName || getRandomHandle();
+
+      usernameModalProviderName.innerText = provider === 'google' ? 'Google' : provider === 'facebook' ? 'Facebook' : 'Guest (Tamu)';
+      inputCustomUsername.value = pendingAuth.suggestedName;
+      usernameCharCount.innerText = `${inputCustomUsername.value.length}/15`;
+      usernameValidationMsg.style.display = 'none';
+
+      currentSelectedAvatar = gameState.avatar || '🚀';
+      document.querySelectorAll('.avatar-choice').forEach(el => {
+        el.classList.toggle('active', el.dataset.avatar === currentSelectedAvatar);
+      });
+
+      modalUsername.classList.add('active');
+      setTimeout(() => {
+        inputCustomUsername.focus();
+        inputCustomUsername.select();
+      }, 100);
+    }
+
+    // Avatar selector logic
+    avatarPickerGrid.addEventListener('click', (e) => {
+      const choice = e.target.closest('.avatar-choice');
+      if (!choice) return;
+      document.querySelectorAll('.avatar-choice').forEach(el => el.classList.remove('active'));
+      choice.classList.add('active');
+      currentSelectedAvatar = choice.dataset.avatar;
+      audio.playKeyStroke();
+    });
+
+    btnRandomUsername.addEventListener('click', () => {
+      audio.playButtonClick();
+      inputCustomUsername.value = getRandomHandle();
+      usernameCharCount.innerText = `${inputCustomUsername.value.length}/15`;
+      usernameValidationMsg.style.display = 'none';
+    });
+
+    inputCustomUsername.addEventListener('input', (e) => {
+      const len = e.target.value.length;
+      usernameCharCount.innerText = `${len}/15`;
+      if (len >= 3) {
+        usernameValidationMsg.style.display = 'none';
       }
     });
+
+    inputCustomUsername.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnSaveUsername.click();
+      }
+    });
+
+    btnSaveUsername.addEventListener('click', () => {
+      const desiredUsername = inputCustomUsername.value.trim();
+      if (!desiredUsername || desiredUsername.length < 3) {
+        usernameValidationMsg.innerText = "Username minimal 3 karakter!";
+        usernameValidationMsg.style.display = 'block';
+        audio.playErrorTone();
+        inputCustomUsername.focus();
+        return;
+      }
+      if (desiredUsername.length > 15) {
+        usernameValidationMsg.innerText = "Username maksimal 15 karakter!";
+        usernameValidationMsg.style.display = 'block';
+        audio.playErrorTone();
+        inputCustomUsername.focus();
+        return;
+      }
+
+      gameState.isLoggedIn = true;
+      gameState.authProvider = pendingAuth.provider || gameState.authProvider || 'guest';
+      gameState.authEmail = pendingAuth.email || gameState.authEmail || '';
+      gameState.playerName = desiredUsername;
+      gameState.avatar = currentSelectedAvatar || '🚀';
+
+      saveGameData();
+      renderLobbyAuth();
+
+      modalUsername.classList.remove('active');
+      audio.playVictoryChime();
+      triggerConfetti();
+    });
+
+    // Auth Simulation: Google
+    btnLoginGoogle.addEventListener('click', () => {
+      audio.playButtonClick();
+      document.getElementById('google-auth-selector').style.display = 'block';
+      document.getElementById('google-auth-loader').style.display = 'none';
+      modalGoogleAuth.classList.add('active');
+    });
+
+    document.querySelectorAll('.google-account-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const email = btn.dataset.email;
+        const name = btn.dataset.name;
+        triggerGoogleAuthLoading(email, name);
+      });
+    });
+
+    document.getElementById('btn-google-custom-login').addEventListener('click', () => {
+      const emailInput = document.getElementById('google-custom-email').value.trim();
+      const email = emailInput || 'user@gmail.com';
+      const name = email.split('@')[0];
+      triggerGoogleAuthLoading(email, name);
+    });
+
+    function triggerGoogleAuthLoading(email, name) {
+      audio.playButtonClick();
+      document.getElementById('google-auth-selector').style.display = 'none';
+      document.getElementById('google-auth-loader').style.display = 'flex';
+
+      setTimeout(() => {
+        modalGoogleAuth.classList.remove('active');
+        audio.playButtonClick();
+        openUsernameModal('google', email, name);
+      }, 700);
+    }
+
+    document.getElementById('btn-close-google-auth').addEventListener('click', () => {
+      audio.playButtonClick();
+      modalGoogleAuth.classList.remove('active');
+    });
+
+    // Auth Simulation: Facebook
+    btnLoginFacebook.addEventListener('click', () => {
+      audio.playButtonClick();
+      document.getElementById('facebook-auth-selector').style.display = 'block';
+      document.getElementById('facebook-auth-loader').style.display = 'none';
+      modalFacebookAuth.classList.add('active');
+    });
+
+    document.getElementById('btn-confirm-facebook-login').addEventListener('click', () => {
+      audio.playButtonClick();
+      document.getElementById('facebook-auth-selector').style.display = 'none';
+      document.getElementById('facebook-auth-loader').style.display = 'flex';
+
+      setTimeout(() => {
+        modalFacebookAuth.classList.remove('active');
+        audio.playButtonClick();
+        openUsernameModal('facebook', 'facebook.com/alex.gaming', 'Alex_FB');
+      }, 700);
+    });
+
+    document.getElementById('btn-close-facebook-auth').addEventListener('click', () => {
+      audio.playButtonClick();
+      modalFacebookAuth.classList.remove('active');
+    });
+
+    // Guest Auth
+    btnLoginGuest.addEventListener('click', () => {
+      audio.playButtonClick();
+      const guestNum = Math.floor(100 + Math.random() * 900);
+      openUsernameModal('guest', 'Mode Tamu', 'Guest_' + guestNum);
+    });
+
+    // User Card Actions
+    btnEditUsername.addEventListener('click', () => {
+      audio.playButtonClick();
+      openUsernameModal(gameState.authProvider || 'guest', gameState.authEmail, gameState.playerName);
+    });
+
+    btnLogout.addEventListener('click', () => {
+      audio.playButtonClick();
+      gameState.isLoggedIn = false;
+      saveGameData();
+      renderLobbyAuth();
+    });
+
+    // Setup initial state
+    loadSavedData();
+    renderLobbyAuth();
 
     // Sound toggle
     const soundToggle = document.getElementById('sound-toggle');
@@ -1701,13 +2695,13 @@
 
     /* --- Keyboard & Input Listeners --- */
     window.addEventListener('keydown', (e) => {
-      // Don't intercept typing if user is editing their player name
-      if (document.activeElement === playerNameInput) return;
+      // Don't intercept typing if user is typing in any text input field
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        if (document.activeElement !== hiddenInput) return;
+      }
 
-      // If victory or leaderboard or levels modal is open, ignore
-      if (victoryModal.classList.contains('active') ||
-          leaderboardModal.classList.contains('active') ||
-          levelsModal.classList.contains('active')) {
+      // If any modal is open, ignore gameplay typing
+      if (document.querySelector('.modal-overlay.active')) {
         return;
       }
 
@@ -1762,6 +2756,12 @@
     // Main Play Button in Center of Lobby
     document.getElementById('btn-play-game').addEventListener('click', () => {
       audio.init();
+      if (!gameState.isLoggedIn) {
+        audio.playButtonClick();
+        const guestNum = Math.floor(100 + Math.random() * 900);
+        openUsernameModal('guest', 'Mode Tamu', 'Guest_' + guestNum);
+        return;
+      }
       startLevel(gameState.unlockedLevel || 1);
     });
 
@@ -1818,11 +2818,13 @@
 
         const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
         const medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+        const avatar = isCurrentPlayer ? (gameState.avatar || '🚀') : (entry.avatar || '⚡');
 
         row.innerHTML = `
           <td class="rank-cell ${rankClass}">${medal} ${idx + 1}</td>
           <td>
             <div class="player-cell">
+              <span style="font-size: 1.25rem;">${avatar}</span>
               <span>${escapeHtml(entry.name)}</span>
               ${isCurrentPlayer ? '<span style="font-size:0.7rem; background:#38bdf8; color:#000; padding:1px 6px; border-radius:8px; font-weight:800;">KAMU</span>' : ''}
             </div>
@@ -1895,7 +2897,7 @@
     });
 
     // Close modals on clicking background overlay
-    [victoryModal, leaderboardModal, levelsModal].forEach(modal => {
+    [victoryModal, leaderboardModal, levelsModal, modalGoogleAuth, modalFacebookAuth].forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal && modal !== victoryModal) {
           modal.classList.remove('active');
