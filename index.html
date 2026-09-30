@@ -1796,8 +1796,42 @@
     </div>
   </div>
 
+  <!-- Firebase SDK Imports via ESM Import Map (Native Browser & Dev Server Support) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      }
+    }
+  </script>
+
   <!-- JAVASCRIPT GAME LOGIC -->
-  <script>
+  <script type="module">
+    import {
+      app,
+      auth,
+      db,
+      googleProvider,
+      facebookProvider,
+      signInWithPopup,
+      signInAnonymously,
+      signOut,
+      onAuthStateChanged,
+      updateProfile,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      onSnapshot,
+      serverTimestamp
+    } from "./firebase.js";
     /* ==========================================================
        1. LIVE MOVING SKY BACKGROUND (DYNAMIC CANVAS)
        ========================================================== */
@@ -2406,7 +2440,7 @@
       }
     });
 
-    btnSaveUsername.addEventListener('click', () => {
+    btnSaveUsername.addEventListener('click', async () => {
       const desiredUsername = inputCustomUsername.value.trim();
       if (!desiredUsername || desiredUsername.length < 3) {
         usernameValidationMsg.innerText = "Username minimal 3 karakter!";
@@ -2432,17 +2466,75 @@
       saveGameData();
       renderLobbyAuth();
 
+      // Cloud Firestore synchronization if authenticated
+      if (auth && auth.currentUser) {
+        try {
+          await updateProfile(auth.currentUser, { displayName: desiredUsername });
+          await setDoc(doc(db, "users", auth.currentUser.uid), {
+            uid: auth.currentUser.uid,
+            playerName: desiredUsername,
+            avatar: currentSelectedAvatar,
+            authProvider: gameState.authProvider,
+            email: auth.currentUser.email || gameState.authEmail || '',
+            totalScore: gameState.totalScore || 0,
+            unlockedLevel: gameState.unlockedLevel || 1,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+
+          await setDoc(doc(db, "leaderboard", auth.currentUser.uid), {
+            uid: auth.currentUser.uid,
+            name: desiredUsername,
+            avatar: currentSelectedAvatar,
+            score: gameState.totalScore || 0,
+            level: gameState.unlockedLevel || 1,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.warn("Firestore sync error:", err);
+        }
+      }
+
       modalUsername.classList.remove('active');
       audio.playVictoryChime();
       triggerConfetti();
     });
 
-    // Auth Simulation: Google
-    btnLoginGoogle.addEventListener('click', () => {
+    // Firebase Auth: Google Login
+    btnLoginGoogle.addEventListener('click', async () => {
       audio.playButtonClick();
-      document.getElementById('google-auth-selector').style.display = 'block';
-      document.getElementById('google-auth-loader').style.display = 'none';
-      modalGoogleAuth.classList.add('active');
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        const email = user.email || 'google.user@gmail.com';
+        const name = user.displayName || email.split('@')[0];
+
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            gameState.isLoggedIn = true;
+            gameState.authProvider = 'google';
+            gameState.authEmail = email;
+            gameState.playerName = data.playerName || name;
+            gameState.avatar = data.avatar || '🚀';
+            gameState.totalScore = Math.max(gameState.totalScore, data.totalScore || 0);
+            gameState.unlockedLevel = Math.max(gameState.unlockedLevel, data.unlockedLevel || 1);
+            saveGameData();
+            renderLobbyAuth();
+            audio.playVictoryChime();
+            return;
+          }
+        } catch (fErr) {
+          console.warn("Firestore user check note:", fErr);
+        }
+
+        openUsernameModal('google', email, name);
+      } catch (err) {
+        console.warn("Firebase Google Popup note:", err.message);
+        document.getElementById('google-auth-selector').style.display = 'block';
+        document.getElementById('google-auth-loader').style.display = 'none';
+        modalGoogleAuth.classList.add('active');
+      }
     });
 
     document.querySelectorAll('.google-account-btn').forEach(btn => {
@@ -2477,12 +2569,42 @@
       modalGoogleAuth.classList.remove('active');
     });
 
-    // Auth Simulation: Facebook
-    btnLoginFacebook.addEventListener('click', () => {
+    // Firebase Auth: Facebook Login
+    btnLoginFacebook.addEventListener('click', async () => {
       audio.playButtonClick();
-      document.getElementById('facebook-auth-selector').style.display = 'block';
-      document.getElementById('facebook-auth-loader').style.display = 'none';
-      modalFacebookAuth.classList.add('active');
+      try {
+        const result = await signInWithPopup(auth, facebookProvider);
+        const user = result.user;
+        const email = user.email || 'facebook.user@fb.com';
+        const name = user.displayName || 'Alex_FB';
+
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            gameState.isLoggedIn = true;
+            gameState.authProvider = 'facebook';
+            gameState.authEmail = email;
+            gameState.playerName = data.playerName || name;
+            gameState.avatar = data.avatar || '🚀';
+            gameState.totalScore = Math.max(gameState.totalScore, data.totalScore || 0);
+            gameState.unlockedLevel = Math.max(gameState.unlockedLevel, data.unlockedLevel || 1);
+            saveGameData();
+            renderLobbyAuth();
+            audio.playVictoryChime();
+            return;
+          }
+        } catch (fErr) {
+          console.warn("Firestore user check note:", fErr);
+        }
+
+        openUsernameModal('facebook', email, name);
+      } catch (err) {
+        console.warn("Firebase Facebook Popup note:", err.message);
+        document.getElementById('facebook-auth-selector').style.display = 'block';
+        document.getElementById('facebook-auth-loader').style.display = 'none';
+        modalFacebookAuth.classList.add('active');
+      }
     });
 
     document.getElementById('btn-confirm-facebook-login').addEventListener('click', () => {
@@ -2502,9 +2624,14 @@
       modalFacebookAuth.classList.remove('active');
     });
 
-    // Guest Auth
-    btnLoginGuest.addEventListener('click', () => {
+    // Firebase Auth: Guest (Anonymous) Login
+    btnLoginGuest.addEventListener('click', async () => {
       audio.playButtonClick();
+      try {
+        await signInAnonymously(auth);
+      } catch (err) {
+        console.warn("Firebase Anonymous sign-in note:", err.message);
+      }
       const guestNum = Math.floor(100 + Math.random() * 900);
       openUsernameModal('guest', 'Mode Tamu', 'Guest_' + guestNum);
     });
@@ -2515,12 +2642,65 @@
       openUsernameModal(gameState.authProvider || 'guest', gameState.authEmail, gameState.playerName);
     });
 
-    btnLogout.addEventListener('click', () => {
+    btnLogout.addEventListener('click', async () => {
       audio.playButtonClick();
+      try {
+        await signOut(auth);
+      } catch (err) {
+        console.warn("Firebase signOut error:", err);
+      }
       gameState.isLoggedIn = false;
       saveGameData();
       renderLobbyAuth();
     });
+
+    // Firebase onAuthStateChanged & Realtime Leaderboard Listener
+    try {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              gameState.isLoggedIn = true;
+              gameState.playerName = data.playerName || gameState.playerName;
+              gameState.avatar = data.avatar || gameState.avatar;
+              gameState.authProvider = data.authProvider || (user.isAnonymous ? 'guest' : 'google');
+              gameState.authEmail = data.email || user.email || (user.isAnonymous ? 'Mode Tamu' : '');
+              gameState.totalScore = Math.max(gameState.totalScore, data.totalScore || 0);
+              gameState.unlockedLevel = Math.max(gameState.unlockedLevel, data.unlockedLevel || 1);
+              saveGameData();
+              renderLobbyAuth();
+            }
+          } catch (e) {
+            console.warn("Firestore fetch error:", e);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Auth state listener error:", e);
+    }
+
+    // Realtime Cloud Leaderboard Listener
+    try {
+      const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(50));
+      onSnapshot(q, (snapshot) => {
+        const cloudScores = [];
+        snapshot.forEach(docSnap => {
+          cloudScores.push(docSnap.data());
+        });
+        if (cloudScores.length > 0) {
+          gameState.leaderboard = cloudScores;
+          if (leaderboardModal && leaderboardModal.classList.contains('active')) {
+            populateLeaderboard();
+          }
+        }
+      }, (err) => {
+        console.warn("Realtime Firestore leaderboard sync note:", err.message);
+      });
+    } catch (err) {
+      console.warn("Leaderboard snapshot error:", err);
+    }
 
     // Setup initial state
     loadSavedData();
@@ -2681,6 +2861,26 @@
       }
 
       saveGameData();
+
+      // Cloud Firestore synchronization on level completion
+      if (auth && auth.currentUser) {
+        try {
+          setDoc(doc(db, "users", auth.currentUser.uid), {
+            totalScore: gameState.totalScore,
+            unlockedLevel: gameState.unlockedLevel,
+            completedLevels: gameState.completedLevels,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+
+          setDoc(doc(db, "leaderboard", auth.currentUser.uid), {
+            score: gameState.totalScore,
+            level: gameState.unlockedLevel,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.warn("Firestore score sync error:", err);
+        }
+      }
 
       // Update Victory Modal Elements
       document.getElementById('victory-wpm').innerText = `${finalWpm} WPM`;
