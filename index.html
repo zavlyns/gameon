@@ -2209,6 +2209,7 @@
       unlockedLevel: 1,
       completedLevels: {}, // level -> boolean
       totalScore: 0,
+      bestWpm: 0,
       leaderboard: [
         { name: "CyberVolt", score: 25000, level: 100, avatar: '🤖' },
         { name: "SpeedDemon", score: 18250, level: 73, avatar: '⚡' },
@@ -2233,6 +2234,7 @@
           gameState.unlockedLevel = parsed.unlockedLevel || 1;
           gameState.completedLevels = parsed.completedLevels || {};
           gameState.totalScore = parsed.totalScore || 0;
+          if (parsed.bestWpm) gameState.bestWpm = parsed.bestWpm || 0;
           if (Array.isArray(parsed.leaderboard) && parsed.leaderboard.length > 0) {
             gameState.leaderboard = parsed.leaderboard;
           }
@@ -2478,6 +2480,8 @@
             email: auth.currentUser.email || gameState.authEmail || '',
             totalScore: gameState.totalScore || 0,
             unlockedLevel: gameState.unlockedLevel || 1,
+            completedLevels: gameState.completedLevels || {},
+            bestWpm: gameState.bestWpm || 0,
             updatedAt: serverTimestamp()
           }, { merge: true });
 
@@ -2487,6 +2491,7 @@
             avatar: currentSelectedAvatar,
             score: gameState.totalScore || 0,
             level: gameState.unlockedLevel || 1,
+            bestWpm: gameState.bestWpm || 0,
             updatedAt: serverTimestamp()
           }, { merge: true });
         } catch (err) {
@@ -2519,6 +2524,12 @@
             gameState.avatar = data.avatar || '🚀';
             gameState.totalScore = Math.max(gameState.totalScore, data.totalScore || 0);
             gameState.unlockedLevel = Math.max(gameState.unlockedLevel, data.unlockedLevel || 1);
+            if (data.completedLevels && typeof data.completedLevels === 'object') {
+              gameState.completedLevels = Object.assign({}, gameState.completedLevels, data.completedLevels);
+            }
+            if (data.bestWpm) {
+              gameState.bestWpm = Math.max(gameState.bestWpm || 0, data.bestWpm);
+            }
             saveGameData();
             renderLobbyAuth();
             audio.playVictoryChime();
@@ -2589,6 +2600,12 @@
             gameState.avatar = data.avatar || '🚀';
             gameState.totalScore = Math.max(gameState.totalScore, data.totalScore || 0);
             gameState.unlockedLevel = Math.max(gameState.unlockedLevel, data.unlockedLevel || 1);
+            if (data.completedLevels && typeof data.completedLevels === 'object') {
+              gameState.completedLevels = Object.assign({}, gameState.completedLevels, data.completedLevels);
+            }
+            if (data.bestWpm) {
+              gameState.bestWpm = Math.max(gameState.bestWpm || 0, data.bestWpm);
+            }
             saveGameData();
             renderLobbyAuth();
             audio.playVictoryChime();
@@ -2669,6 +2686,12 @@
               gameState.authEmail = data.email || user.email || (user.isAnonymous ? 'Mode Tamu' : '');
               gameState.totalScore = Math.max(gameState.totalScore, data.totalScore || 0);
               gameState.unlockedLevel = Math.max(gameState.unlockedLevel, data.unlockedLevel || 1);
+              if (data.completedLevels && typeof data.completedLevels === 'object') {
+                gameState.completedLevels = Object.assign({}, gameState.completedLevels, data.completedLevels);
+              }
+              if (data.bestWpm) {
+                gameState.bestWpm = Math.max(gameState.bestWpm || 0, data.bestWpm);
+              }
               saveGameData();
               renderLobbyAuth();
             }
@@ -2860,21 +2883,34 @@
         gameState.unlockedLevel = gameState.currentLevel + 1;
       }
 
+      if (!gameState.bestWpm || finalWpm > gameState.bestWpm) {
+        gameState.bestWpm = finalWpm;
+      }
+
       saveGameData();
 
       // Cloud Firestore synchronization on level completion
       if (auth && auth.currentUser) {
         try {
           setDoc(doc(db, "users", auth.currentUser.uid), {
+            playerName: gameState.playerName,
+            avatar: gameState.avatar || '🚀',
             totalScore: gameState.totalScore,
             unlockedLevel: gameState.unlockedLevel,
             completedLevels: gameState.completedLevels,
+            bestWpm: gameState.bestWpm,
+            lastWpm: finalWpm,
+            lastAccuracy: finalAcc,
             updatedAt: serverTimestamp()
           }, { merge: true });
 
           setDoc(doc(db, "leaderboard", auth.currentUser.uid), {
+            uid: auth.currentUser.uid,
+            name: gameState.playerName,
+            avatar: gameState.avatar || '🚀',
             score: gameState.totalScore,
             level: gameState.unlockedLevel,
+            bestWpm: gameState.bestWpm,
             updatedAt: serverTimestamp()
           }, { merge: true });
         } catch (err) {
